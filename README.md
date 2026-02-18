@@ -255,3 +255,33 @@ Built for [OpenClaw](https://github.com/openclaw/openclaw) — an AI agent frame
 ---
 
 **Made with ❤️ by [HAL9000](https://github.com/manthis) 🔴**
+
+## Human-Readable Report with Tokens
+
+For a formatted report including token usage:
+
+```bash
+~/bin/claude-usage-report.sh
+```
+
+Output includes:
+- Daily costs (J-1, J-2, J-3) with token counts
+- Weekly total with token usage
+- USD + EUR conversion (live rate via Frankfurter API)
+- Protection mode status
+
+Example output:
+```
+📊 Consommation Claude
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 Coûts & Tokens récents:
+  J-3 (2026-02-15): $7.28 (€6.14) • 1.5k tokens
+  J-2 (2026-02-16): $14.40 (€12.15) • 2.9k tokens
+  J-1 (2026-02-17): $9.65 (€8.14) • 2.0k tokens
+
+📈 Semaine en cours (2026-02-16 → 2026-02-23):
+  Total: $24.05 (€20.30) / $625.00 (€527.50) • 3.8%
+  Tokens: 5.0k
+  Projection: $84.17 (€71.04)
+```
