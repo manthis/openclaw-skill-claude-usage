@@ -89,3 +89,23 @@ To read state without an API call (e.g., for morning briefing):
 ```bash
 node "{baseDir}/dist/index.js" report --format html
 ```
+
+### Human-Readable Report
+
+For a formatted, human-readable report with token usage:
+
+```bash
+claude-usage-report.sh
+# or
+~/bin/claude-usage-report.sh
+```
+
+The report includes:
+- **Daily costs** (J-1, J-2, J-3) with individual token counts
+- **Weekly totals** with aggregated token usage
+- **USD + EUR** dual currency display
+- **Protection mode** status
+- **7-day averages**
+
+This is ideal for quick status checks and daily monitoring.
+
