@@ -61,14 +61,14 @@ $ claude-usage detail
 ### Global Install
 
 ```bash
-npm install -g @manthis/claude-usage-cli
+npm install -g @manthis/openclaw-skill-claude-usage
 ```
 
 ### Local Install
 
 ```bash
-git clone https://github.com/manthis/claude-usage-cli.git
-cd claude-usage-cli
+git clone https://github.com/manthis/openclaw-skill-claude-usage.git
+cd openclaw-skill-claude-usage
 npm install
 npm run build
 npm link  # Makes claude-usage available globally
