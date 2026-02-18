@@ -55,7 +55,7 @@ $ claude-usage detail
 
 - Node.js 20+
 - npm or pnpm
-- A running instance of [hal9000-claude-usage-proxy](https://github.com/manthis/hal9000-claude-usage-proxy) — a secure proxy for Anthropic's Admin API (see its README for self-hosting instructions on Render.com or Docker)
+- A running instance of [claude-usage-proxy](https://github.com/manthis/claude-usage-proxy) — a secure proxy for Anthropic's Admin API (see its README for self-hosting instructions on Render.com or Docker)
 - An Anthropic Admin API key (configured in the proxy, not in this CLI)
 
 ### Global Install
@@ -99,7 +99,7 @@ This CLI requires a secure proxy to access Claude Admin API endpoints:
 - `/v1/organizations/usage_report/messages` (tokens)
 - `/v1/organizations/cost_report` (costs)
 
-**Example proxy:** [hal9000-claude-usage-proxy](https://github.com/manthis/hal9000-claude-usage-proxy) (NestJS + TypeScript)
+**Example proxy:** [claude-usage-proxy](https://github.com/manthis/claude-usage-proxy) (NestJS + TypeScript)
 
 ## 📖 Usage
 

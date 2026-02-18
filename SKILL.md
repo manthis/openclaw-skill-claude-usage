@@ -40,7 +40,7 @@ node "$SKILL_DIR/dist/index.js" report --format json
 | Variable | Required | Default |
 |----------|----------|---------|
 | `CLAUDE_USAGE_PROXY_TOKEN` | Yes (for `check`) | — |
-| `CLAUDE_USAGE_PROXY_URL` | No | `https://hal9000-claude-usage-proxy.onrender.com` |
+| `CLAUDE_USAGE_PROXY_URL` | No | `https://claude-usage-proxy.onrender.com` |
 | `CLAUDE_USAGE_STATE_FILE` | No | `~/.openclaw/workspace/memory/claude-usage-state.json` |
 | `CLAUDE_USAGE_WEEKLY_BUDGET` | No | `625` |
 

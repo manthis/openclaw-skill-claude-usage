@@ -35,7 +35,7 @@ async function fetchExchangeRate(): Promise<number> {
 export function loadConfig(): Config {
   const home = homedir();
   return {
-    proxyUrl: process.env.CLAUDE_USAGE_PROXY_URL || 'https://hal9000-claude-usage-proxy.onrender.com',
+    proxyUrl: process.env.CLAUDE_USAGE_PROXY_URL || 'https://claude-usage-proxy.onrender.com',
     proxyToken: process.env.CLAUDE_USAGE_PROXY_TOKEN || '',
     stateFile: process.env.CLAUDE_USAGE_STATE_FILE || join(home, '.openclaw/workspace/memory/claude-usage-state.json'),
     weeklyBudget: parseFloat(process.env.CLAUDE_USAGE_WEEKLY_BUDGET || '625'),
