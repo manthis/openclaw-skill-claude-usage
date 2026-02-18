@@ -46,124 +46,98 @@ export interface DailyCost {
   tokens_output?: number;
 }
 
+/** Shared error handler for axios requests */
+function handleAxiosError(err: unknown): never {
+  if (err instanceof AxiosError) {
+    if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
+      throw new Error('Proxy timeout — server may be waking up (Render cold start). Retry in 1-2 min.');
+    }
+    if (err.response) {
+      throw new Error(`Proxy HTTP ${err.response.status}: ${err.response.statusText}`);
+    }
+    throw new Error(`Proxy connection error: ${err.message}`);
+  }
+  throw err;
+}
+
+/** Shared proxy GET request with error checking */
+async function proxyGet<T extends { type?: string; statusCode?: number; error?: { message: string }; message?: string }>(
+  config: Config,
+  path: string,
+  startDate: string,
+  endDate: string,
+): Promise<T> {
+  if (!config.proxyToken) {
+    throw new Error('CLAUDE_USAGE_PROXY_TOKEN not set. Configure it in env or .env file.');
+  }
+
+  try {
+    const resp = await axios.get<T>(`${config.proxyUrl}${path}`, {
+      params: {
+        starting_at: `${startDate}T00:00:00Z`,
+        ending_at: `${endDate}T00:00:00Z`,
+      },
+      headers: { Authorization: `Bearer ${config.proxyToken}` },
+      timeout: 45_000,
+    });
+
+    const body = resp.data;
+    if (body.type === 'error' || body.statusCode) {
+      const msg = body.error?.message || body.message || 'Unknown proxy error';
+      throw new Error(`Proxy error: ${msg}`);
+    }
+    return body;
+  } catch (err) {
+    handleAxiosError(err);
+  }
+}
+
 /**
  * Fetch cost report from the proxy for a date range.
- * No client-side rate limiting — trust the proxy (20 req/min).
  */
 export async function fetchCostReport(
   config: Config,
   startDate: string,
   endDate: string,
 ): Promise<DailyCost[]> {
+  const body = await proxyGet<CostReportResponse>(
+    config, '/v1/organizations/cost_report', startDate, endDate,
+  );
 
-  if (!config.proxyToken) {
-    throw new Error('CLAUDE_USAGE_PROXY_TOKEN not set. Configure it in env or .env file.');
-  }
-
-  const url = `${config.proxyUrl}/v1/organizations/cost_report`;
-  const params = {
-    starting_at: `${startDate}T00:00:00Z`,
-    ending_at: `${endDate}T00:00:00Z`,
-  };
-
-  try {
-    const resp = await axios.get<CostReportResponse>(url, {
-      params,
-      headers: { Authorization: `Bearer ${config.proxyToken}` },
-      timeout: 45_000,
-    });
-
-    const body = resp.data;
-
-    // Check for API/proxy errors
-    if (body.type === 'error' || body.statusCode) {
-      const msg = body.error?.message || body.message || 'Unknown proxy error';
-      throw new Error(`Proxy error: ${msg}`);
-    }
-
-    // Parse daily costs
-    return (body.data || []).map((entry) => {
-      const date = entry.starting_at.split('T')[0];
-      const cost = (entry.results || []).reduce(
-        (sum, r) => sum + parseFloat(r.amount || '0'),
-        0,
-      );
-      return { date, cost };
-    });
-  } catch (err) {
-    if (err instanceof AxiosError) {
-      if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
-        throw new Error('Proxy timeout — server may be waking up (Render cold start). Retry in 1-2 min.');
-      }
-      if (err.response) {
-        throw new Error(`Proxy HTTP ${err.response.status}: ${err.response.statusText}`);
-      }
-      throw new Error(`Proxy connection error: ${err.message}`);
-    }
-    throw err;
-  }
+  return (body.data || []).map((entry) => {
+    const date = entry.starting_at.split('T')[0];
+    const cost = (entry.results || []).reduce(
+      (sum, r) => sum + parseFloat(r.amount || '0'),
+      0,
+    );
+    return { date, cost };
+  });
 }
 
 /**
  * Fetch usage report (tokens) from the proxy for a date range.
- * No client-side rate limiting — trust the proxy (20 req/min).
  */
 export async function fetchUsageReport(
   config: Config,
   startDate: string,
   endDate: string,
 ): Promise<{ date: string; tokens_input: number; tokens_output: number }[]> {
+  const body = await proxyGet<UsageReportResponse>(
+    config, '/v1/organizations/usage_report/messages', startDate, endDate,
+  );
 
-  if (!config.proxyToken) {
-    throw new Error('CLAUDE_USAGE_PROXY_TOKEN not set. Configure it in env or .env file.');
-  }
-
-  const url = `${config.proxyUrl}/v1/organizations/usage_report/messages`;
-  const params = {
-    starting_at: `${startDate}T00:00:00Z`,
-    ending_at: `${endDate}T00:00:00Z`,
-  };
-
-  try {
-    const resp = await axios.get<UsageReportResponse>(url, {
-      params,
-      headers: { Authorization: `Bearer ${config.proxyToken}` },
-      timeout: 45_000,
-    });
-
-    const body = resp.data;
-
-    // Check for API/proxy errors
-    if (body.type === 'error' || body.statusCode) {
-      const msg = body.error?.message || body.message || 'Unknown proxy error';
-      throw new Error(`Proxy error: ${msg}`);
-    }
-
-    // Parse daily tokens
-    return (body.data || []).map((entry) => {
-      const date = entry.starting_at.split('T')[0];
-      const tokens_input = (entry.results || []).reduce(
-        (sum, r) => sum + (r.input_tokens || 0),
-        0,
-      );
-      const tokens_output = (entry.results || []).reduce(
-        (sum, r) => sum + (r.output_tokens || 0),
-        0,
-      );
-      return { date, tokens_input, tokens_output };
-    });
-  } catch (err) {
-    if (err instanceof AxiosError) {
-      if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
-        throw new Error('Proxy timeout — server may be waking up (Render cold start). Retry in 1-2 min.');
-      }
-      if (err.response) {
-        throw new Error(`Proxy HTTP ${err.response.status}: ${err.response.statusText}`);
-      }
-      throw new Error(`Proxy connection error: ${err.message}`);
-    }
-    throw err;
-  }
+  return (body.data || []).map((entry) => {
+    const date = entry.starting_at.split('T')[0];
+    const tokens_input = (entry.results || []).reduce(
+      (sum, r) => sum + (r.input_tokens || 0),
+      0,
+    );
+    const tokens_output = (entry.results || []).reduce(
+      (sum, r) => sum + (r.output_tokens || 0),
+      0,
+    );
+    return { date, tokens_input, tokens_output };
+  });
 }
 
 /**
